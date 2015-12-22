@@ -13,14 +13,23 @@ var {
   Text,
   View,
   Image,
+  ListView,
 } = React;
 
 var RnBootstrap = React.createClass({
   render: function() {
-    if (!this.state.repositories){
+    if (!this.state.loaded){
       return this.renderLoadingView();
     }
-    var repo = this.state.repositories[0]
+    return (
+        <ListView
+         dataSource={this.state.dataSource} 
+         renderRow={this.renderRepo} 
+         style={styles.listView}
+        />
+        );
+  },
+  renderRepo: function(repo){
     return (
       <View style={styles.container}>
         <Image style={styles.thumbnail} source={{uri: repo.owner.avatar_url}}/>
@@ -40,7 +49,8 @@ var RnBootstrap = React.createClass({
   },
   getInitialState: function() {
     return {
-      repositories: null,
+      dataSource: new ListView.DataSource({ rowHasChanged: (row1, row2) => row1 !== row2, }), 
+      loaded: false, 
     };
   },
   componentDidMount: function() {
@@ -50,7 +60,10 @@ var RnBootstrap = React.createClass({
      fetch(REQUEST_URL) 
        .then((response) => response.json()) 
        .then((responseData) => { 
-         this.setState({ repositories: responseData.items, }); 
+         this.setState({ 
+           dataSource: this.state.dataSource.cloneWithRows(responseData.items),
+           loaded: true,
+         }); 
        }) 
        .done(); 
   },
@@ -78,6 +91,10 @@ var styles = StyleSheet.create({
   thumbnail: {
     width: 96,
     height: 96,
+  },
+  listView: {
+    paddingTop: 20,
+    backgroundColor: '#F5FCFF',
   },
 });
 
